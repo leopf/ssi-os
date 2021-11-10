@@ -36,6 +36,7 @@ def set_user_password(context: ExecContext, username: str, password: str):
 def setup_primary_disk(context: ExecContext):
     efi_size = 1000
 
+    context.exec_no_err("parted /dev/sde --script -- mklabel gpt")
     context.exec_no_err("sfdisk --delete /dev/{0}".format(context.primary_disk))
     context.exec_no_err("parted /dev/{0} mkpart EFI fat32 1 {1}".format(context.primary_disk, efi_size))
     context.exec_no_err("parted /dev/{0} set 1 esp on".format(context.primary_disk))
@@ -102,8 +103,6 @@ def peru_install_repo(context: ExecContext, repo: str):
     context.exec_chroot("rm -r {}".format(temp_dir))
 
 def install(context: ExecContext):
-    #context.exec_no_err("loadkeys {}".format(context.config["key_layout"]))
-    
     promt_primary_disk(context)
 
     context.exec_no_err("timedatectl set-ntp true")
@@ -235,7 +234,7 @@ def install(context: ExecContext):
     context.exec_chroot("sed -i 's/GRUB_CMDLINE_LINUX_DEFAULT=\"/GRUB_CMDLINE_LINUX_DEFAULT=\"nvidia-drm.modeset=1 /g' /etc/default/grub")
     context.exec_chroot("grub-mkconfig -o /boot/grub/grub.cfg")
     context.exec_chroot("systemctl enable sddm")
-    context.exec_no_err("reboot")
+    # context.exec_no_err("reboot")
 
 
 
