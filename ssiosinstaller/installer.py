@@ -50,12 +50,14 @@ def setup_primary_disk(context: ExecContext):
 
     context.exec_no_err("sgdisk -n 3::+{0}M --typecode=3:8200 --change-name=3:'SWAP' /dev/{1}".format(memory_150_p, context.primary_disk))
     context.exec_no_err("sgdisk -n 4::-0 --typecode=4:8300 --change-name=4:'ROOT' /dev/{0}".format(context.primary_disk))
+    
+    context.exec_no_err("sgdisk -A 1:set:2 /dev/{0}".format(context.primary_disk))
 
-    context.exec_no_err("mkfs.fat -F32 /dev/{0}1".format(context.primary_disk))
-    context.exec_no_err("mkswap /dev/{0}2".format(context.primary_disk))
-    context.exec_no_err("swapon /dev/{0}2".format(context.primary_disk))
-    context.exec_no_err("mkfs.btrfs /dev/{0}3".format(context.primary_disk))
-    context.exec_no_err("mount /dev/{0}3 /mnt".format(context.primary_disk))
+    context.exec_no_err("mkfs.fat -F32 /dev/{0}2".format(context.primary_disk))
+    context.exec_no_err("mkswap /dev/{0}3".format(context.primary_disk))
+    context.exec_no_err("swapon /dev/{0}3".format(context.primary_disk))
+    context.exec_no_err("mkfs.btrfs /dev/{0}4".format(context.primary_disk))
+    context.exec_no_err("mount /dev/{0}4 /mnt".format(context.primary_disk))
 
     context.exec_no_err("btrfs su cr /mnt/@")
     context.exec_no_err("btrfs su cr /mnt/@home")
@@ -63,15 +65,15 @@ def setup_primary_disk(context: ExecContext):
     context.exec_no_err("btrfs su cr /mnt/@var_log")
     context.exec_no_err("umount /mnt")
 
-    context.exec_no_err("mount -o noatime,space_cache=v2,subvol=@ /dev/{0}3 /mnt".format(context.primary_disk))
+    context.exec_no_err("mount -o noatime,space_cache=v2,subvol=@ /dev/{0}4 /mnt".format(context.primary_disk))
 
     context.exec_no_err("mkdir -p /mnt/{boot,home,.snapshots,var}")
     context.exec_no_err("mkdir /mnt/var/log")
 
-    context.exec_no_err("mount -o noatime,space_cache=v2,subvol=@home /dev/{0}3 /mnt/home".format(context.primary_disk))
-    context.exec_no_err("mount -o noatime,space_cache=v2,subvol=@snapshots /dev/{0}3 /mnt/.snapshots".format(context.primary_disk))
-    context.exec_no_err("mount -o noatime,space_cache=v2,subvol=@var_log /dev/{0}3 /mnt/var/log".format(context.primary_disk))
-    context.exec_no_err("mount /dev/{0}1 /mnt/boot".format(context.primary_disk))
+    context.exec_no_err("mount -o noatime,space_cache=v2,subvol=@home /dev/{0}4 /mnt/home".format(context.primary_disk))
+    context.exec_no_err("mount -o noatime,space_cache=v2,subvol=@snapshots /dev/{0}4 /mnt/.snapshots".format(context.primary_disk))
+    context.exec_no_err("mount -o noatime,space_cache=v2,subvol=@var_log /dev/{0}4 /mnt/var/log".format(context.primary_disk))
+    context.exec_no_err("mount /dev/{0}2 /mnt/boot".format(context.primary_disk))
 
 def pacman_install(context: ExecContext, packages: List[str]):
     context.exec_chroot("pacman -S {} --noconfirm".format(" ".join(packages)))
