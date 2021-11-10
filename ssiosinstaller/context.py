@@ -3,6 +3,9 @@ import subprocess
 from typing import List, TypedDict
 from paramiko import SSHClient, AutoAddPolicy
 
+def escape_subcommand(command: str):
+    return command.replace("'", "\\'")
+
 class CommandResult(TypedDict):
     stderr: str
     stdout: str
@@ -37,11 +40,11 @@ class ExecContext:
         pass
 
     def exec_chroot_as_user(self, command: str, no_error: bool=True) -> CommandResult:
-        final_command = "su {0} -c $\"{1}\"".format(self.config["username"], command.replace("\"", "\\\""))
+        final_command = "su {0} -c $\'{1}\'".format(self.config["username"], escape_subcommand(command))
         return self.exec_chroot(final_command, no_error)
 
     def exec_chroot(self, command: str, no_error: bool=True) -> CommandResult:
-        final_command = "arch-chroot /mnt bash -c $\"{}\"".format(command.replace("\"", "\\\""))
+        final_command = "arch-chroot /mnt bash -c $\'{}\'".format(escape_subcommand(command))
 
         if no_error:
             return self.exec_no_err(final_command)
