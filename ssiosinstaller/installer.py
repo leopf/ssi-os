@@ -36,7 +36,7 @@ def set_user_password(context: ExecContext, username: str, password: str):
 def setup_primary_disk(context: ExecContext):
     efi_size = 1000
 
-    context.exec_no_err("parted /dev/sde --script -- mklabel gpt")
+    context.exec_no_err("parted /dev/{0} --script -- mklabel gpt".format(context.primary_disk))
     context.exec_no_err("sfdisk --delete /dev/{0}".format(context.primary_disk))
     context.exec_no_err("parted /dev/{0} mkpart EFI fat32 1 {1}".format(context.primary_disk, efi_size))
     context.exec_no_err("parted /dev/{0} set 1 esp on".format(context.primary_disk))
