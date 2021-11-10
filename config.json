@@ -1,0 +1,14 @@
+{
+    "computer_name": "ssiOSchips",
+    "root_password": "123456",
+    
+    "username": "ssio",
+    "user_password": "mittein1min",
+    "key_layout": "de-latin1",
+    "timezone": "Europe/Berlin",
+    "lang": "en_US",
+
+    "custom_pacman_mirrors": [ "http://mirror.kudlik.space/$repo/os/$arch" ],
+    "additional_packages": [ "micro" ],
+    "kernels": [ "linux", "linux-zen", "linux-lts" ]
+}
