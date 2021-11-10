@@ -102,7 +102,7 @@ def peru_install_repo(context: ExecContext, repo: str):
     context.exec_chroot("rm -r {}".format(temp_dir))
 
 def install(context: ExecContext):
-    context.exec_no_err("loadkeys {}".format(context.config["key_layout"]))
+    #context.exec_no_err("loadkeys {}".format(context.config["key_layout"]))
     
     promt_primary_disk(context)
 
