@@ -61,6 +61,7 @@ class ExecContext:
 class LocalExecContext(ExecContext):
     def exec(self, cmd: str) -> CommandResult:
         print("--executing: ", cmd)
+        input("Press Enter to continue...")
         p = subprocess.Popen(cmd, stderr=subprocess.PIPE, stdout=subprocess.PIPE, shell=True)
         data = p.communicate()
 

@@ -113,6 +113,8 @@ def install(context: ExecContext):
 
     # general setup
     context.exec_no_err("genfstab -U /mnt >> /mnt/etc/fstab")
+
+    context.exec_chroot("localectl set-keymap {0}".format(context.config["key_layout"]))
     context.exec_chroot("ln -sf /usr/share/zoneinfo/{} /etc/localtime".format(context.config["timezone"]))
     context.exec_chroot("hwclock --systohc")
     context.exec_chroot("echo LANG={}.UTF-8 > /etc/locale.conf".format(context.config["lang"]))
