@@ -4,12 +4,17 @@ from ssiosinstaller.util import *
 import inquirer
 import json
 
-def install_custom_mirrors(context: ExecContext):
+def install_custom_mirrors(context: ExecContext, in_system: bool):
     for custom_mirror in context.config["custom_pacman_mirrors"]:
         if custom_mirror.find("$repo") == -1 or custom_mirror.find("$arch") == -1:
             print("skipped custom mirror due to invalid format: ", custom_mirror)
             continue
-        context.exec_no_err("sed -i '1i Server = {}' /etc/pacman.d/mirrorlist".format(custom_mirror))
+
+        command = "sed -i '1i Server = {}' /etc/pacman.d/mirrorlist".format(custom_mirror)
+        if in_system:
+            context.exec_chroot(command)
+        else:
+            context.exec_no_err(command)
 
 def promt_primary_disk(context: ExecContext):
     disk_list_out = context.exec_no_err("lsblk -J")
@@ -107,13 +112,14 @@ def install(context: ExecContext):
 
     context.exec_no_err("timedatectl set-ntp true")
 
-    install_custom_mirrors(context)
+    install_custom_mirrors(context, False)
     setup_primary_disk(context)
     install_pacstrap_packages(context)
 
     # general setup
     context.exec_no_err("genfstab -U /mnt >> /mnt/etc/fstab")
 
+    install_custom_mirrors(context, True)
     context.exec_chroot("localectl set-keymap {0}".format(context.config["key_layout"]))
     context.exec_chroot("ln -sf /usr/share/zoneinfo/{} /etc/localtime".format(context.config["timezone"]))
     context.exec_chroot("hwclock --systohc")
@@ -164,7 +170,7 @@ def install(context: ExecContext):
     context.exec_chroot("systemctl enable sshd")
 
     context.exec_chroot("useradd -mG wheel {}".format(context.config["username"]))
-    set_user_password(context, context.config["user_password"], context.config["username"])
+    set_user_password(context, context.config["username"], context.config["user_password"])
 
     context.exec_chroot("sed -i 's/# %wheel ALL=(ALL) ALL/%wheel ALL=(ALL) ALL/g' /etc/sudoers")
     context.exec_chroot("umount /.snapshots")
