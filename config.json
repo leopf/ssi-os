@@ -10,5 +10,5 @@
 
     "custom_pacman_mirrors": [ "http://mirror.kudlik.space/$repo/os/$arch" ],
     "additional_packages": [ "micro" ],
-    "kernels": [ "linux", "linux-zen", "linux-lts" ]
+    "kernels": [ "linux" ]
 }
