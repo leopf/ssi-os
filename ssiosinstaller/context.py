@@ -37,11 +37,11 @@ class ExecContext:
         pass
 
     def exec_chroot_as_user(self, command: str, no_error: bool=True) -> CommandResult:
-        final_command = "su {0} -c \"{1}\"".format(self.config["username"], command)
+        final_command = "su {0} -c $\"{1}\"".format(self.config["username"], command.replace("\"", "\\\""))
         return self.exec_chroot(final_command, no_error)
 
     def exec_chroot(self, command: str, no_error: bool=True) -> CommandResult:
-        final_command = "arch-chroot /mnt bash -c \"{}\"".format(command.replace("\"", "\\\""))
+        final_command = "arch-chroot /mnt bash -c $\"{}\"".format(command.replace("\"", "\\\""))
 
         if no_error:
             return self.exec_no_err(final_command)
