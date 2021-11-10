@@ -28,10 +28,12 @@ class ExecContext:
     config: InstallConfig
     primary_disk: str
     memory_size_mb: int
+    wfi: bool
 
     def __init__(self, config: InstallConfig) -> None:
         self.config = config
         self.primary_disk = None
+        self.wfi = False
 
     def __enter__(self):
         return self
@@ -42,6 +44,12 @@ class ExecContext:
     def exec_chroot_as_user(self, command: str, no_error: bool=True) -> CommandResult:
         final_command = "su {0} -c $\'{1}\'".format(self.config["username"], escape_subcommand(command))
         return self.exec_chroot(final_command, no_error)
+
+    def enable_wfi(self):
+        self.wfi = True
+
+    def disable_wfi(self):
+        self.wfi = False
 
     def exec_chroot(self, command: str, no_error: bool=True) -> CommandResult:
         final_command = "arch-chroot /mnt bash -c $\'{}\'".format(escape_subcommand(command))
@@ -66,7 +74,9 @@ class ExecContext:
 class LocalExecContext(ExecContext):
     def exec(self, cmd: str) -> CommandResult:
         print("--executing: ", cmd)
-        input("Press Enter to continue...")
+        if self.wfi:
+            input("Press Enter to continue...")
+
         p = subprocess.Popen(cmd, stderr=subprocess.PIPE, stdout=subprocess.PIPE, shell=True)
         data = p.communicate()
 
@@ -112,6 +122,9 @@ class SSHExecContext(ExecContext):
     def exec(self, cmd: str) -> CommandResult:
         if not self.ssh_client:
             raise "you need to use this with 'with'"
+
+        if self.wfi:
+            input("Press Enter to continue...")
 
         # could use stdin, maybe, but pls dont
         _, stdout, stderr = self.ssh_client.exec_command(cmd)

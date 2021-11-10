@@ -39,19 +39,17 @@ def set_user_password(context: ExecContext, username: str, password: str):
     context.exec_chroot("usermod --password $(openssl passwd {0}) {1}".format(password, username))
 
 def setup_primary_disk(context: ExecContext):
-    efi_size = 1000
-
-    context.exec_no_err("parted /dev/{0} --script -- mklabel gpt".format(context.primary_disk))
-    context.exec_no_err("sfdisk --delete /dev/{0}".format(context.primary_disk))
-    context.exec_no_err("parted /dev/{0} mkpart EFI fat32 1 {1}".format(context.primary_disk, efi_size))
-    context.exec_no_err("parted /dev/{0} set 1 esp on".format(context.primary_disk))
+    context.exec_no_err("sgdisk -Z /dev/{0}".format(context.primary_disk))
+    context.exec_no_err("sgdisk -a 2048 -o /dev/{0}".format(context.primary_disk))
+    context.exec_no_err("sgdisk -n 1::+1M --typecode=1:ef02 --change-name=1:'BIOSBOOT' /dev/{0}".format(context.primary_disk))
+    context.exec_no_err("sgdisk -n 2::+1G --typecode=2:ef00 --change-name=2:'EFIBOOT' /dev/{0}".format(context.primary_disk))
     
     context.memory_size_mb = find_memory_size(context)
     memory_150_p = int(context.memory_size_mb * 1.5)
     print("swap size: ", memory_150_p, "MB")
 
-    context.exec_no_err("parted /dev/{0} mkpart swap linux-swap {1} {2}".format(context.primary_disk, efi_size, memory_150_p))
-    context.exec_no_err("parted /dev/{0} mkpart linux btrfs {1} 100%".format(context.primary_disk, memory_150_p + efi_size))
+    context.exec_no_err("sgdisk -n 3::+{0}M --typecode=3:8200 --change-name=3:'SWAP' /dev/{1}".format(memory_150_p, context.primary_disk))
+    context.exec_no_err("sgdisk -n 4::-0 --typecode=4:8300 --change-name=4:'ROOT' /dev/{0}".format(context.primary_disk))
 
     context.exec_no_err("mkfs.fat -F32 /dev/{0}1".format(context.primary_disk))
     context.exec_no_err("mkswap /dev/{0}2".format(context.primary_disk))
@@ -111,7 +109,10 @@ def install(context: ExecContext):
     install_custom_mirrors(context, False)
     context.exec_no_err("sed -i 's/#ParallelDownloads = 5/ParallelDownloads = 10\\nILoveCandy/g' /etc/pacman.conf")
 
+    context.enable_wfi()
     setup_primary_disk(context)
+    context.disable_wfi()
+
     install_pacstrap_packages(context)
 
     # general setup
@@ -203,9 +204,11 @@ def install(context: ExecContext):
         "snap-pac-grub",
     ])
 
+    context.enable_wfi()
     paru_install(context, [
         "snapper-gui"
     ])
+    context.disable_wfi()
 
     context.exec_chroot("sed -i 's/%wheel ALL=(ALL) NOPASSWD: ALL/# %wheel ALL=(ALL) NOPASSWD: ALL/g' /etc/sudoers")
     context.exec_chroot("sed -i 's/# %wheel ALL=(ALL) ALL/%wheel ALL=(ALL) ALL/g' /etc/sudoers")
