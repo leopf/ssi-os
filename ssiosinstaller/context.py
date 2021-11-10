@@ -73,21 +73,17 @@ class ExecContext:
 
 class LocalExecContext(ExecContext):
     def exec(self, cmd: str) -> CommandResult:
-        print("--executing: ", cmd)
+        print(cmd)
         if self.wfi:
             input("Press Enter to continue...")
 
         p = subprocess.Popen(cmd, stderr=subprocess.PIPE, stdout=subprocess.PIPE, shell=True)
         data = p.communicate()
 
-        res = {
+        return {
             "stdout": data[0].decode(),
             "stderr": data[1].rstrip(b'\n').decode()
         }
-
-        print(res)
-
-        return res
 
 
 class SSHExecContext(ExecContext):
@@ -123,6 +119,7 @@ class SSHExecContext(ExecContext):
         if not self.ssh_client:
             raise "you need to use this with 'with'"
 
+        print(cmd)
         if self.wfi:
             input("Press Enter to continue...")
 

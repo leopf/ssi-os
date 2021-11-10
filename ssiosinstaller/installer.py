@@ -111,9 +111,7 @@ def install(context: ExecContext):
     install_custom_mirrors(context, False)
     context.exec_no_err("sed -i 's/#ParallelDownloads = 5/ParallelDownloads = 10\\nILoveCandy/g' /etc/pacman.conf")
 
-    context.enable_wfi()
     setup_primary_disk(context)
-    context.disable_wfi()
 
     install_pacstrap_packages(context)
 
@@ -206,11 +204,9 @@ def install(context: ExecContext):
         "snap-pac-grub",
     ])
 
-    context.enable_wfi()
     paru_install(context, [
         "snapper-gui"
     ] + context.config["additional_packages"])
-    context.disable_wfi()
 
     context.exec_chroot("sed -i 's/%wheel ALL=(ALL) NOPASSWD: ALL/# %wheel ALL=(ALL) NOPASSWD: ALL/g' /etc/sudoers")
     context.exec_chroot("sed -i 's/# %wheel ALL=(ALL) ALL/%wheel ALL=(ALL) ALL/g' /etc/sudoers")
