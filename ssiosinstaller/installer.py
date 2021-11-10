@@ -209,7 +209,7 @@ def install(context: ExecContext):
     context.enable_wfi()
     paru_install(context, [
         "snapper-gui"
-    ])
+    ] + context.config["additional_packages"])
     context.disable_wfi()
 
     context.exec_chroot("sed -i 's/%wheel ALL=(ALL) NOPASSWD: ALL/# %wheel ALL=(ALL) NOPASSWD: ALL/g' /etc/sudoers")
@@ -245,7 +245,7 @@ def install(context: ExecContext):
         "sddm",
         "kde-applications-meta",
         "plasma-meta"
-    ] + context.config["additional_packages"])
+    ])
 
     context.exec_chroot("sed -i 's/MODULES=(btrfs)/MODULES=(btrfs nvidia nvidia_modeset nvidia_uvm nvidia_drm)/g' /etc/mkinitcpio.conf")
     context.exec_chroot("mkinitcpio -P")
