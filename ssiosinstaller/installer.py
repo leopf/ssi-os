@@ -235,6 +235,7 @@ def install(context: ExecContext):
     context.exec_chroot("sed -i 's/GRUB_CMDLINE_LINUX_DEFAULT=\"/GRUB_CMDLINE_LINUX_DEFAULT=\"nvidia-drm.modeset=1 /g' /etc/default/grub")
     context.exec_chroot("grub-mkconfig -o /boot/grub/grub.cfg")
     context.exec_chroot("systemctl enable sddm")
+    context.exec_no_err("reboot")
 
 
 
