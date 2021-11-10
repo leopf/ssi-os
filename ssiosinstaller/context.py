@@ -41,10 +41,12 @@ class ExecContext:
         return self.exec_chroot(final_command, no_error)
 
     def exec_chroot(self, command: str, no_error: bool=True) -> CommandResult:
+        final_command = "arch-chroot /mnt bash -c \"{}\"".format(command.replace("\"", "\\\""))
+
         if no_error:
-            return self.exec_no_err("arch-chroot /mnt {}".format(command))
+            return self.exec_no_err(final_command)
         else:
-            return self.exec("arch-chroot /mnt {}".format(command))
+            return self.exec(final_command)
 
     def exec_no_err(self, command: str) -> CommandResult:
         res = self.exec(command)
