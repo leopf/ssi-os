@@ -98,10 +98,10 @@ def install_pacstrap_packages(context: ExecContext):
     context.exec_no_err("pacstrap /mnt {}".format(" ".join(packages)))
 
 def paru_install(context: ExecContext, packages: List[str]):
-    context.exec_chroot("mkdir /tmp/paru_temp")
-    context.exec_chroot("chmod -R 777 /tmp/paru_temp")
-    context.exec_chroot_as_user("cd /tmp/paru_temp && paru -S {} --noconfirm".format(" ".join(packages)))
-    context.exec_chroot("rm -r /tmp/paru_temp")
+    context.exec_chroot("mkdir /var/paru_temp")
+    context.exec_chroot("chmod -R 777 /var/paru_temp")
+    context.exec_chroot_as_user("cd /var/paru_temp && paru -S {} --noconfirm".format(" ".join(packages)))
+    context.exec_chroot("rm -r /var/paru_temp")
 
 def install(context: ExecContext):
     promt_primary_disk(context)
@@ -247,6 +247,9 @@ def install(context: ExecContext):
     context.exec_chroot("sed -i 's/GRUB_CMDLINE_LINUX_DEFAULT=\"/GRUB_CMDLINE_LINUX_DEFAULT=\"nvidia-drm.modeset=1 /g' /etc/default/grub")
     context.exec_chroot("grub-mkconfig -o /boot/grub/grub.cfg")
     context.exec_chroot("systemctl enable sddm")
+    context.exec_chroot("localectl set-keymap {0}".format(context.config["key_layout"]))
+
+
     # context.exec_no_err("reboot")
 
 
