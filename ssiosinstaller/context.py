@@ -4,7 +4,7 @@ from typing import List, TypedDict
 from paramiko import SSHClient, AutoAddPolicy
 
 def escape_subcommand(command: str):
-    return command.replace("'", "\\'")
+    return command.replace("\\", "\\\\").replace("'", "\\'")
 
 class CommandResult(TypedDict):
     stderr: str

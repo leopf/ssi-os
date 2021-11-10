@@ -120,6 +120,7 @@ def install(context: ExecContext):
     context.exec_no_err("genfstab -U /mnt >> /mnt/etc/fstab")
 
     install_custom_mirrors(context, True)
+    context.exec_chroot("sed -i 's/#ParallelDownloads = 5/ParallelDownloads = 5\\nILoveCandy/g' /etc/pacman.conf")
     context.exec_chroot("localectl set-keymap {0}".format(context.config["key_layout"]))
     context.exec_chroot("ln -sf /usr/share/zoneinfo/{} /etc/localtime".format(context.config["timezone"]))
     context.exec_chroot("hwclock --systohc")
@@ -194,7 +195,6 @@ def install(context: ExecContext):
     context.exec_chroot("pacman-key --recv-key 3056513887B78AEB --keyserver keyserver.ubuntu.com")
     context.exec_chroot("pacman-key --lsign-key 3056513887B78AEB")
     context.exec_chroot("pacman -U 'https://cdn-mirror.chaotic.cx/chaotic-aur/chaotic-keyring.pkg.tar.zst' 'https://cdn-mirror.chaotic.cx/chaotic-aur/chaotic-mirrorlist.pkg.tar.zst' --noconfirm")
-    context.exec_chroot("sed -i 's/#ParallelDownloads = 5/ParallelDownloads = 5\\nILoveCandy/g' /etc/pacman.conf")
     context.exec_chroot("sed -i 's/#\\[multilib\\]/\\[multilib\\]\\nInclude = \\/etc\\/pacman.d\\/mirrorlist\\n\\n\\[chaotic-aur\\]\\nInclude = \\/etc\\/pacman.d\\/chaotic-mirrorlist/g' /etc/pacman.conf")
     context.exec_chroot("pacman -Syy")
     
