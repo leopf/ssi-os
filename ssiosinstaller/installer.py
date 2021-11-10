@@ -97,15 +97,11 @@ def install_pacstrap_packages(context: ExecContext):
 
     context.exec_no_err("pacstrap /mnt {}".format(" ".join(packages)))
 
-def peru_install_repo(context: ExecContext, repo: str):
-    temp_dir = "peru_temp"
-    context.exec_chroot("git clone {0} {1}".format(repo, temp_dir))
-    context.exec_chroot("chmod -R 777 {}".format(temp_dir))
-
-    context.exec_chroot("cd {0} && makepkg -soe".format(temp_dir))
-    context.exec_chroot_as_user("cd {0} && makepkg -i".format(temp_dir))
-
-    context.exec_chroot("rm -r {}".format(temp_dir))
+def paru_install(context: ExecContext, packages: List[str]):
+    context.exec_chroot("mkdir /tmp/paru_temp")
+    context.exec_chroot("chmod -R 777 /tmp/paru_temp")
+    context.exec_chroot_as_user("cd /tmp/paru_temp && paru -S {} --noconfirm".format(" ".join(packages)))
+    context.exec_chroot("rm -r /tmp/paru_temp")
 
 def install(context: ExecContext):
     promt_primary_disk(context)
@@ -113,6 +109,8 @@ def install(context: ExecContext):
     context.exec_no_err("timedatectl set-ntp true")
 
     install_custom_mirrors(context, False)
+    context.exec_no_err("sed -i 's/#ParallelDownloads = 5/ParallelDownloads = 10\\nILoveCandy/g' /etc/pacman.conf")
+
     setup_primary_disk(context)
     install_pacstrap_packages(context)
 
@@ -120,7 +118,7 @@ def install(context: ExecContext):
     context.exec_no_err("genfstab -U /mnt >> /mnt/etc/fstab")
 
     install_custom_mirrors(context, True)
-    context.exec_chroot("sed -i 's/#ParallelDownloads = 5/ParallelDownloads = 5\\nILoveCandy/g' /etc/pacman.conf")
+    context.exec_chroot("sed -i 's/#ParallelDownloads = 5/ParallelDownloads = 10\\nILoveCandy/g' /etc/pacman.conf")
     context.exec_chroot("localectl set-keymap {0}".format(context.config["key_layout"]))
     context.exec_chroot("ln -sf /usr/share/zoneinfo/{} /etc/localtime".format(context.config["timezone"]))
     context.exec_chroot("hwclock --systohc")
@@ -173,7 +171,6 @@ def install(context: ExecContext):
     context.exec_chroot("useradd -mG wheel {}".format(context.config["username"]))
     set_user_password(context, context.config["username"], context.config["user_password"])
 
-    context.exec_chroot("sed -i 's/# %wheel ALL=(ALL) ALL/%wheel ALL=(ALL) ALL/g' /etc/sudoers")
     context.exec_chroot("umount /.snapshots")
     context.exec_chroot("rm -r /.snapshots")
     context.exec_chroot("snapper --no-dbus -v -c root create-config /")
@@ -197,14 +194,22 @@ def install(context: ExecContext):
     context.exec_chroot("pacman -U 'https://cdn-mirror.chaotic.cx/chaotic-aur/chaotic-keyring.pkg.tar.zst' 'https://cdn-mirror.chaotic.cx/chaotic-aur/chaotic-mirrorlist.pkg.tar.zst' --noconfirm")
     context.exec_chroot("sed -i 's/#\\[multilib\\]/\\[multilib\\]\\nInclude = \\/etc\\/pacman.d\\/mirrorlist\\n\\n\\[chaotic-aur\\]\\nInclude = \\/etc\\/pacman.d\\/chaotic-mirrorlist/g' /etc/pacman.conf")
     context.exec_chroot("pacman -Syy")
-    
+
+    context.exec_chroot("sed -i 's/# %wheel ALL=(ALL) NOPASSWD: ALL/%wheel ALL=(ALL) NOPASSWD: ALL/g' /etc/sudoers")
+
     pacman_install(context, [
         "paru",
         "rsync",
         "snap-pac-grub",
     ])
 
-    peru_install_repo(context, "https://aur.archlinux.org/snapper-gui-git.git")
+    paru_install(context, [
+        "snapper-gui"
+    ])
+
+    context.exec_chroot("sed -i 's/%wheel ALL=(ALL) NOPASSWD: ALL/# %wheel ALL=(ALL) NOPASSWD: ALL/g' /etc/sudoers")
+    context.exec_chroot("sed -i 's/# %wheel ALL=(ALL) ALL/%wheel ALL=(ALL) ALL/g' /etc/sudoers")
+
     context.exec_chroot("mkdir /etc/pacman.d/hooks")
 
     context.exec_chroot('echo "[Trigger]" > /etc/pacman.d/hooks/50-bootbackup.hook')
