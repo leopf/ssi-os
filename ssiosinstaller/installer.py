@@ -53,11 +53,11 @@ def setup_primary_disk(context: ExecContext):
     
     context.exec_no_err("sgdisk -A 1:set:2 /dev/{0}".format(context.primary_disk))
 
-    context.exec_no_err("mkfs.fat -F32 /dev/{0}2".format(context.primary_disk))
-    context.exec_no_err("mkswap /dev/{0}3".format(context.primary_disk))
-    context.exec_no_err("swapon /dev/{0}3".format(context.primary_disk))
-    context.exec_no_err("mkfs.btrfs /dev/{0}4".format(context.primary_disk))
-    context.exec_no_err("mount /dev/{0}4 /mnt".format(context.primary_disk))
+    context.exec_no_err("mkfs.fat -F32 /dev/{0}".format(context.get_primary_disk_partition(2)))
+    context.exec_no_err("mkswap /dev/{0}".format(context.get_primary_disk_partition(3)))
+    context.exec_no_err("swapon /dev/{0}".format(context.get_primary_disk_partition(3)))
+    context.exec_no_err("mkfs.btrfs /dev/{0}".format(context.get_primary_disk_partition(4)))
+    context.exec_no_err("mount /dev/{0} /mnt".format(context.get_primary_disk_partition(4)))
 
     context.exec_no_err("btrfs su cr /mnt/@")
     context.exec_no_err("btrfs su cr /mnt/@home")
@@ -65,15 +65,15 @@ def setup_primary_disk(context: ExecContext):
     context.exec_no_err("btrfs su cr /mnt/@var_log")
     context.exec_no_err("umount /mnt")
 
-    context.exec_no_err("mount -o noatime,space_cache=v2,subvol=@ /dev/{0}4 /mnt".format(context.primary_disk))
+    context.exec_no_err("mount -o noatime,space_cache=v2,subvol=@ /dev/{0} /mnt".format(context.get_primary_disk_partition(4)))
 
     context.exec_no_err("mkdir -p /mnt/{boot,home,.snapshots,var}")
     context.exec_no_err("mkdir /mnt/var/log")
 
-    context.exec_no_err("mount -o noatime,space_cache=v2,subvol=@home /dev/{0}4 /mnt/home".format(context.primary_disk))
-    context.exec_no_err("mount -o noatime,space_cache=v2,subvol=@snapshots /dev/{0}4 /mnt/.snapshots".format(context.primary_disk))
-    context.exec_no_err("mount -o noatime,space_cache=v2,subvol=@var_log /dev/{0}4 /mnt/var/log".format(context.primary_disk))
-    context.exec_no_err("mount /dev/{0}2 /mnt/boot".format(context.primary_disk))
+    context.exec_no_err("mount -o noatime,space_cache=v2,subvol=@home /dev/{0} /mnt/home".format(context.get_primary_disk_partition(4)))
+    context.exec_no_err("mount -o noatime,space_cache=v2,subvol=@snapshots /dev/{0} /mnt/.snapshots".format(context.get_primary_disk_partition(4)))
+    context.exec_no_err("mount -o noatime,space_cache=v2,subvol=@var_log /dev/{0} /mnt/var/log".format(context.get_primary_disk_partition(4)))
+    context.exec_no_err("mount /dev/{0} /mnt/boot".format(context.get_primary_disk_partition(2)))
 
 def pacman_install(context: ExecContext, packages: List[str]):
     context.exec_chroot("pacman -S {} --noconfirm".format(" ".join(packages)))
@@ -205,7 +205,8 @@ def install(context: ExecContext):
     ])
 
     paru_install(context, [
-        "snapper-gui"
+        "snapper-gui",
+        "google-chrome"
     ] + context.config["additional_packages"])
 
     context.exec_chroot("sed -i 's/%wheel ALL=(ALL) NOPASSWD: ALL/# %wheel ALL=(ALL) NOPASSWD: ALL/g' /etc/sudoers")
@@ -239,7 +240,8 @@ def install(context: ExecContext):
         "libxcb",
         "qt5",
         "sddm",
-        "kde-applications-meta",
+        "dolphin",
+        "kitty",
         "plasma-meta"
     ])
 

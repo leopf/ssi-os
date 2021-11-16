@@ -41,6 +41,12 @@ class ExecContext:
     def __exit__(self, exc_type, exc_value, exc_tb):
         pass
 
+    def get_primary_disk_partition(self, p: int):
+        if self.primary_disk.startswith("nvme"):
+            return "{0}p{1}".format(self.primary_disk, p)
+        else:
+            return "{0}{1}".format(self.primary_disk, p)
+
     def exec_chroot_as_user(self, command: str, no_error: bool=True) -> CommandResult:
         final_command = "su {0} -c $\'{1}\'".format(self.config["username"], escape_subcommand(command))
         return self.exec_chroot(final_command, no_error)
